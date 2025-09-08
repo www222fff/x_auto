@@ -30,21 +30,37 @@ export default {
     }
   },
 
-  // 每小时自动发 "hello" 推文
+  // 每小时自动发推：从另一个 KV 读取最新数据，取前5条构造推文
   async scheduled(event, env, ctx) {
     try {
+      // 读取另一个 KV namespace 的 key
+      const raw = await env.UTXO_KV.get('api_data_latest-utxo');
+      if (!raw) return;
+      const obj = JSON.parse(raw);
+      const arr = Array.isArray(obj.data) ? obj.data.slice(0, 5) : [];
+      if (!arr.length) return;
+
       const accessToken = await ensureAccessToken(env);
-      const payload = { text: "hello" };
-      const resp = await fetch('https://api.x.com/2/tweets', {
-        method: 'POST',
-        headers: {
-          'authorization': `Bearer ${accessToken}`,
-          'content-type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      });
-      // 可选：记录结果到日志或 KV
-      // const result = await resp.text();
+
+      for (const item of arr) {
+        let text = '';
+        if (item.blockHeight) {
+          text = `blockHeight：${item.blockHeight}`;
+        } else {
+          const [addr, val] = Object.entries(item)[0];
+          text = `Address: ${addr} UTXO: ${val}`;
+        }
+        const payload = { text };
+        await fetch('https://api.x.com/2/tweets', {
+          method: 'POST',
+          headers: {
+            'authorization': `Bearer ${accessToken}`,
+            'content-type': 'application/json',
+          },
+          body: JSON.stringify(payload),
+        });
+        // 可选：延迟/错误处理/日志
+      }
     } catch (err) {
       // 可选：错误处理/日志
     }
