@@ -29,6 +29,26 @@ export default {
       return json({ error: err.message || String(err) }, 500);
     }
   },
+
+  // 每小时自动发 "hello" 推文
+  async scheduled(event, env, ctx) {
+    try {
+      const accessToken = await ensureAccessToken(env);
+      const payload = { text: "hello" };
+      const resp = await fetch('https://api.x.com/2/tweets', {
+        method: 'POST',
+        headers: {
+          'authorization': `Bearer ${accessToken}`,
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+      // 可选：记录结果到日志或 KV
+      // const result = await resp.text();
+    } catch (err) {
+      // 可选：错误处理/日志
+    }
+  },
 };
 
 // ===== Helpers =====
@@ -116,7 +136,7 @@ async function authStart(request, env) {
   const state = crypto.randomUUID();
 
   // 保存 state 到 KV，稍后回调验证
-  //await env.TWITTER_KV.put(`oauth_state:${state}`, 'valid', { expirationTtl: 600 });
+  await env.TWITTER_KV.put(`oauth_state:${state}`, 'valid', { expirationTtl: 600 });
 
   // 构建授权 URL，不带 PKCE 参数
   const clientId = env.CLIENT_ID;

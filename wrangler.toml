@@ -5,8 +5,8 @@ compatibility_date = "2025-09-08"
 
 
 # 可选：定时任务（例如每天 10:00 UTC 触发，你可在 CRON 里调用 /tweet）
-# [triggers]
-# crons = ["0 10 * * *"]
+[triggers]
+crons = ["0 10 * * *"]
 
 
 [[kv_namespaces]]
