@@ -12,7 +12,6 @@ export default {
     const url = new URL(request.url);
     const { pathname } = url;
 
-    // CORS 处理（如需从前端直接调用 /tweet）
     if (request.method === 'OPTIONS') {
       return new Response(null, { headers: corsHeaders() });
     }
@@ -141,7 +140,7 @@ async function authStart(env) {
 
   const clientId = env.CLIENT_ID;
   const redirectUri = encodeURIComponent(env.REDIRECT_URI);
-  const scope = encodeURIComponent('tweet.write tweet.read users.read offline.access');
+  const scope = encodeURIComponent(env.SCOPES);
 
   const url = `https://x.com/i/oauth2/authorize?response_type=code&client_id=${clientId}&redirect_uri=${redirectUri}&scope=${scope}&state=${state}`;
 
