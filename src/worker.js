@@ -34,7 +34,7 @@ export default {
   async scheduled(event, env, ctx) {
     try {
       // 读取另一个 KV namespace 的 key
-      const raw = await env.UTXO_KV.get('api_data_latest-utxo');
+      const raw = await env.btcrank.get('api_data_latest-utxo');
       if (!raw) return;
       const obj = JSON.parse(raw);
       const arr = Array.isArray(obj.data) ? obj.data.slice(0, 5) : [];
