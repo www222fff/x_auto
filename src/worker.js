@@ -111,24 +111,21 @@ function randomString(len = 32) {
   return base64urlEncodeBytes(bytes).slice(0, len);
 }
 
-// ---- OAuth2.0：发起授权 ----
-async function authStart(env) {
-  const state = randomString(32);
-  const codeVerifier = randomString(64);
-  const codeChallenge = base64urlEncodeBytes(await sha256(codeVerifier)); // S256
+async function authStart(request, env) {
+  // 随机 state 防止 CSRF
+  const state = crypto.randomUUID();
 
-  await putState(env, state, { codeVerifier, createdAt: Date.now() });
+  // 保存 state 到 KV，稍后回调验证
+  await env.TWITTER_KV.put(`oauth_state:${state}`, 'valid', { expirationTtl: 600 });
 
-  const authorize = new URL('https://x.com/i/oauth2/authorize');
-  authorize.searchParams.set('response_type', 'code');
-  authorize.searchParams.set('client_id', env.CLIENT_ID);
-  authorize.searchParams.set('redirect_uri', env.REDIRECT_URI);
-  authorize.searchParams.set('scope', env.SCOPES || 'tweet.write tweet.read users.read offline.access');
-  authorize.searchParams.set('state', state);
-  authorize.searchParams.set('code_challenge', codeChallenge);
-  authorize.searchParams.set('code_challenge_method', 'S256');
+  // 构建授权 URL，不带 PKCE 参数
+  const clientId = env.CLIENT_ID;
+  const redirectUri = encodeURIComponent(env.REDIRECT_URI);
+  const scope = encodeURIComponent('tweet.write tweet.read users.read offline.access');
 
-  return Response.redirect(authorize.toString(), 302);
+  const url = `https://x.com/i/oauth2/authorize?response_type=code&client_id=${clientId}&redirect_uri=${redirectUri}&scope=${scope}&state=${state}`;
+
+  return Response.redirect(url, 302);
 }
 
 async function authCallback(request, env) {
@@ -136,6 +133,7 @@ async function authCallback(request, env) {
   const code = url.searchParams.get('code');
   if (!code) return new Response('Missing code', { status: 400 });
 
+  // 用 Client Secret 生成 Basic Authorization
   const creds = btoa(`${env.CLIENT_ID}:${env.CLIENT_SECRET}`);
   const form = new URLSearchParams();
   form.set('grant_type', 'authorization_code');
