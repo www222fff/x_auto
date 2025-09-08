@@ -20,6 +20,7 @@ export default {
     try {
       if (pathname === '/') return landing(env);
       if (pathname === '/auth/start') return authStart(env);
+      if (pathname === '/auth/start11') return authStart11(env);
       if (pathname === '/auth/callback') return authCallback(request, env);
       if (pathname === '/tweet' && request.method === 'POST') return tweet(request, env);
       if (pathname === '/me' && request.method === 'GET') return whoami(env);
@@ -112,14 +113,32 @@ async function getTokens(env) {
   return raw ? JSON.parse(raw) : null;
 }
 
-async function authStart(request, env) {
-  // 随机 state 防止 CSRF
-  const state = crypto.randomUUID();
+async function authStart11(env) {
+  const state = randomString(32);
+  const codeVerifier = randomString(64);
+  const codeChallenge = base64urlEncodeBytes(await sha256(codeVerifier)); // S256
 
-  // 保存 state 到 KV，稍后回调验证
+
+  await putState(env, state, { codeVerifier, createdAt: Date.now() });
+
+
+  const authorize = new URL('https://x.com/i/oauth2/authorize');
+  authorize.searchParams.set('response_type', 'code');
+  authorize.searchParams.set('client_id', env.CLIENT_ID);
+  authorize.searchParams.set('redirect_uri', env.REDIRECT_URI);
+  authorize.searchParams.set('scope', env.SCOPES || 'tweet.write tweet.read users.read offline.access');
+  authorize.searchParams.set('state', state);
+  authorize.searchParams.set('code_challenge', codeChallenge);
+  authorize.searchParams.set('code_challenge_method', 'S256');
+
+
+  return Response.redirect(authorize.toString(), 302);
+}
+
+async function authStart(env) {
+  const state = crypto.randomUUID();
   await env.TWITTER_KV.put(`oauth_state:${state}`, 'valid', { expirationTtl: 600 });
 
-  // 构建授权 URL，不带 PKCE 参数
   const clientId = env.CLIENT_ID;
   const redirectUri = encodeURIComponent(env.REDIRECT_URI);
   const scope = encodeURIComponent('tweet.write tweet.read users.read offline.access');
