@@ -17,5 +17,6 @@ preview_id = "499e7c50b95f4217bfbc325d9f93553a"
 
 [vars]
 CLIENT_ID = "Smx5dV9sb2IyV3ZxS3J4SldzWFU6MTpjaQ"
+CLIENT_SECRET = "vC10gcOmy2kVar7Y7GJbBC-FVzqHekNBoFgriW2DKNhl6F4qEQ"
 REDIRECT_URI = "https://bitcoin-monitor-x-auto.feng73440.workers.dev/auth/callback"
 SCOPES = "tweet.write tweet.read users.read offline.access"

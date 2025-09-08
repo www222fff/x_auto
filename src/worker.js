@@ -131,52 +131,33 @@ async function authStart(env) {
   return Response.redirect(authorize.toString(), 302);
 }
 
-// ---- OAuth2.0：回调换 token ----
 async function authCallback(request, env) {
   const url = new URL(request.url);
   const code = url.searchParams.get('code');
-  const state = url.searchParams.get('state');
+  if (!code) return new Response('Missing code', { status: 400 });
 
-  if (!code || !state) return text('Missing code/state', 400);
-
-  const cached = await getState(env, state);
-  if (!cached) return text('Invalid or expired state', 400);
-
+  const creds = btoa(`${env.CLIENT_ID}:${env.CLIENT_SECRET}`);
   const form = new URLSearchParams();
   form.set('grant_type', 'authorization_code');
-  form.set('client_id', env.CLIENT_ID);
-  form.set('redirect_uri', env.REDIRECT_URI);
   form.set('code', code);
-  form.set('code_verifier', cached.codeVerifier);
+  form.set('redirect_uri', env.REDIRECT_URI);
 
-  const resp = await fetch('https://api.x.com/2/oauth2/token', {
+  const resp = await fetch('https://api.twitter.com/2/oauth2/token', {
     method: 'POST',
-    headers: { 'content-type': 'application/x-www-form-urlencoded' },
-    body: form.toString(),
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'Authorization': `Basic ${creds}`
+    },
+    body: form.toString()
   });
 
-  if (!resp.ok) {
-    const errTxt = await resp.text();
-    return text(`Token exchange failed: ${resp.status} ${errTxt}`, 500);
-  }
-
   const data = await resp.json();
-  // data: { token_type, expires_in, access_token, scope, refresh_token? }
-  const now = Date.now();
-  const expires_at = now + (data.expires_in ? (data.expires_in - 60) * 1000 : 110 * 60 * 1000); // 提前1分钟刷新
+  if (!resp.ok) return new Response(JSON.stringify(data, null, 2), { status: resp.status });
 
-  const tokens = {
-    access_token: data.access_token,
-    refresh_token: data.refresh_token || null,
-    scope: data.scope || env.SCOPES,
-    expires_at,
-    obtained_at: now,
-  };
+  // 保存 access_token / refresh_token 到 KV
+  await env.TWITTER_KV.put('oauth_tokens', JSON.stringify(data));
 
-  await saveTokens(env, tokens);
-  await clearState(env, state);
-
-  return text('Auth success. You can now POST /tweet');
+  return new Response('Auth success', { status: 200 });
 }
 
 // ---- 确保 access_token 有效；必要时用 refresh_token 刷新 ----
