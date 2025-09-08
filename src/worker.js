@@ -50,7 +50,7 @@ export default {
           text = `Address: ${addr} UTXO: ${val}`;
         }
         const payload = { text };
-        await fetch('https://api.x.com/2/tweets', {
+        await fetch('https://api.twitter.com/2/tweets', {
           method: 'POST',
           headers: {
             'authorization': `Bearer ${accessToken}`,
@@ -183,7 +183,7 @@ async function ensureAccessToken(env) {
   form.set('client_id', env.CLIENT_ID);
   form.set('refresh_token', tokens.refresh_token);
 
-  const resp = await fetch('https://api.x.com/2/oauth2/token', {
+  const resp = await fetch('https://api.twitter.com/2/oauth2/token', {
     method: 'POST',
     headers: { 'content-type': 'application/x-www-form-urlencoded' },
     body: form.toString(),
@@ -211,7 +211,7 @@ async function tweet(request, env) {
 
   const payload = { text: content, ...rest };
 
-  const resp = await fetch('https://api.x.com/2/tweets', {
+  const resp = await fetch('https://api.twitter.com/2/tweets', {
     method: 'POST',
     headers: {
       'authorization': `Bearer ${accessToken}`,
