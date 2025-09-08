@@ -204,29 +204,50 @@ async function ensureAccessToken(env) {
 }
 
 async function tweet(request, env) {
-  const { text: content, ...rest } = await request.json().catch(() => ({ }));
+  const { text: content, ...rest } = await request.json().catch(() => ({}));
   if (!content) return json({ error: 'Missing "text"' }, 400);
 
   const accessToken = await ensureAccessToken(env);
 
   const payload = { text: content, ...rest };
 
-  const resp = await fetch('https://api.twitter.com/2/tweets', {
-    method: 'POST',
-    headers: {
-      'authorization': `Bearer ${accessToken}`,
-      'content-type': 'application/json',
-    },
+  console.log("🚀 [tweet] Request payload:", JSON.stringify(payload));
+
+  const url = "https://api.twitter.com/2/tweets";
+  const headers = {
+    "authorization": `Bearer ${accessToken}`,
+    "content-type": "application/json",
+  };
+
+  console.log("🚀 [tweet] POST", url, "headers:", headers);
+
+  const resp = await fetch(url, {
+    method: "POST",
+    headers,
     body: JSON.stringify(payload),
   });
 
-  const body = await resp.text();
-  let data;
-  try { data = JSON.parse(body); } catch { data = { raw: body }; }
+  const rawBody = await resp.text();
+  console.log("📥 [tweet] Response status:", resp.status, "body:", rawBody);
 
-  if (!resp.ok) return json({ error: 'Create tweet failed', status: resp.status, data }, resp.status);
+  let data;
+  try { 
+    data = JSON.parse(rawBody); 
+  } catch { 
+    data = { raw: rawBody }; 
+  }
+
+  if (!resp.ok) {
+    return json({ 
+      error: "Create tweet failed", 
+      status: resp.status, 
+      data 
+    }, resp.status);
+  }
+
   return json(data, 201);
 }
+
 
 async function whoami(env) {
   const t = await getTokens(env);
