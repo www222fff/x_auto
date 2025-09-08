@@ -138,7 +138,8 @@ async function authStart(env) {
   return Response.redirect(authUrl, 302);
 }
 
-async function authCallback(url, env) {
+async function authCallback(request, env) {
+  const url = new URL(request.url);
   const code = url.searchParams.get("code");
   if (!code) return new Response("Missing code", { status: 400 });
 
