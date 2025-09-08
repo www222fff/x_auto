@@ -1,0 +1,20 @@
+name = "x-oauth-worker"
+main = "src/worker.js"
+compatibility_date = "2025-09-08"
+
+
+# 可选：定时任务（例如每天 10:00 UTC 触发，你可在 CRON 里调用 /tweet）
+# [triggers]
+# crons = ["0 10 * * *"]
+
+
+[[kv_namespaces]]
+binding = "TWITTER_KV"
+id = "499e7c50b95f4217bfbc325d9f93553a"
+preview_id = "499e7c50b95f4217bfbc325d9f93553a"
+
+
+[vars]
+CLIENT_ID = "Smx5dV9sb2IyV3ZxS3J4SldzWFU6MTpjaQ"
+REDIRECT_URI = "https://bitcoin_monitor_x_auto.workers.dev/auth/callback"
+SCOPES = "tweet.write tweet.read users.read offline.access"
