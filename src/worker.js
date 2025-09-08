@@ -59,15 +59,12 @@ export default {
           },
           body: JSON.stringify(payload),
         });
-        // 可选：延迟/错误处理/日志
       }
     } catch (err) {
-      // 可选：错误处理/日志
     }
   },
 };
 
-// ===== Helpers =====
 function corsHeaders() {
   return {
     'Access-Control-Allow-Origin': '*',
@@ -106,19 +103,6 @@ const KV_KEYS = {
   TOKENS: 'oauth_tokens',
 };
 
-async function putState(env, state, data) {
-  await env.TWITTER_KV.put(KV_KEYS.OAUTH_STATE(state), JSON.stringify(data), { expirationTtl: 600 }); // 10分钟有效
-}
-
-async function getState(env, state) {
-  const raw = await env.TWITTER_KV.get(KV_KEYS.OAUTH_STATE(state));
-  return raw ? JSON.parse(raw) : null;
-}
-
-async function clearState(env, state) {
-  await env.TWITTER_KV.delete(KV_KEYS.OAUTH_STATE(state));
-}
-
 async function saveTokens(env, tokens) {
   await env.TWITTER_KV.put(KV_KEYS.TOKENS, JSON.stringify(tokens));
 }
@@ -126,25 +110,6 @@ async function saveTokens(env, tokens) {
 async function getTokens(env) {
   const raw = await env.TWITTER_KV.get(KV_KEYS.TOKENS);
   return raw ? JSON.parse(raw) : null;
-}
-
-// ---- PKCE 辅助函数 ----
-async function sha256(input) {
-  const data = new TextEncoder().encode(input);
-  const digest = await crypto.subtle.digest('SHA-256', data);
-  return new Uint8Array(digest);
-}
-
-function base64urlEncodeBytes(bytes) {
-  let binary = '';
-  for (let i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i]);
-  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-}
-
-function randomString(len = 32) {
-  const bytes = new Uint8Array(len);
-  crypto.getRandomValues(bytes);
-  return base64urlEncodeBytes(bytes).slice(0, len);
 }
 
 async function authStart(request, env) {
@@ -229,7 +194,6 @@ async function ensureAccessToken(env) {
   return tokens.access_token;
 }
 
-// ---- 发推 ----
 async function tweet(request, env) {
   const { text: content, ...rest } = await request.json().catch(() => ({ }));
   if (!content) return json({ error: 'Missing "text"' }, 400);
@@ -255,7 +219,6 @@ async function tweet(request, env) {
   return json(data, 201);
 }
 
-// ---- 调试：查看保存的 token 元信息 ----
 async function whoami(env) {
   const t = await getTokens(env);
   if (!t) return json({ authed: false });
