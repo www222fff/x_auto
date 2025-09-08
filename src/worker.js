@@ -116,7 +116,7 @@ async function authStart(request, env) {
   const state = crypto.randomUUID();
 
   // 保存 state 到 KV，稍后回调验证
-  await env.TWITTER_KV.put(`oauth_state:${state}`, 'valid', { expirationTtl: 600 });
+  //await env.TWITTER_KV.put(`oauth_state:${state}`, 'valid', { expirationTtl: 600 });
 
   // 构建授权 URL，不带 PKCE 参数
   const clientId = env.CLIENT_ID;
