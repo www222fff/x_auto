@@ -14,6 +14,10 @@ binding = "TWITTER_KV"
 id = "499e7c50b95f4217bfbc325d9f93553a"
 preview_id = "499e7c50b95f4217bfbc325d9f93553a"
 
+[[kv_namespaces]]
+binding = "btcrank"
+id = "6d9655126ab3403cb774c1cc4455ee76"
+preview_id = "6d9655126ab3403cb774c1cc4455ee76"
 
 [vars]
 CLIENT_ID = "Smx5dV9sb2IyV3ZxS3J4SldzWFU6MTpjaQ"
