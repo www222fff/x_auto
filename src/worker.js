@@ -53,8 +53,8 @@ export default {
         await fetch('https://api.twitter.com/2/tweets', {
           method: 'POST',
           headers: {
-            'authorization': `Bearer ${accessToken}`,
-            'content-type': 'application/json',
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
           },
           body: JSON.stringify(payload),
         });
@@ -75,12 +75,12 @@ function corsHeaders() {
 function json(body, status = 200, headers = {}) {
   return new Response(JSON.stringify(body, null, 2), {
     status,
-    headers: { 'content-type': 'application/json; charset=UTF-8', ...corsHeaders(), ...headers },
+    headers: { 'Content-Type': 'application/json; charset=UTF-8', ...corsHeaders(), ...headers },
   });
 }
 
 function text(body, status = 200, headers = {}) {
-  return new Response(body, { status, headers: { 'content-type': 'text/plain; charset=UTF-8', ...headers } });
+  return new Response(body, { status, headers: { 'Content-Type': 'text/plain; charset=UTF-8', ...headers } });
 }
 
 async function landing(env) {
@@ -92,7 +92,7 @@ async function landing(env) {
       `Start auth: /auth/start\n` +
       `Callback:   /auth/callback\n` +
       `POST /tweet {\"text\":\"hello\"}`,
-    { headers: { 'content-type': 'text/plain; charset=UTF-8' } }
+    { headers: { 'Content-Type': 'text/plain; charset=UTF-8' } }
   );
 }
 
@@ -185,7 +185,7 @@ async function ensureAccessToken(env) {
 
   const resp = await fetch('https://api.twitter.com/2/oauth2/token', {
     method: 'POST',
-    headers: { 'content-type': 'application/x-www-form-urlencoded' },
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: form.toString(),
   });
 
@@ -215,8 +215,8 @@ async function tweet(request, env) {
 
   const url = "https://api.twitter.com/2/tweets";
   const headers = {
-    "authorization": `Bearer ${accessToken}`,
-    "content-type": "application/json",
+    "Authorization": `Bearer ${accessToken}`,
+    "Content-Type": "application/json",
   };
 
   console.log("🚀 [tweet] POST", url, "headers:", headers);
