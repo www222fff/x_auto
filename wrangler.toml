@@ -11,16 +11,16 @@ crons = ["0 10 * * *"]
 
 [[kv_namespaces]]
 binding = "TWITTER_KV"
-id = "499e7c50b95f4217bfbc325d9f93553a"
-preview_id = "499e7c50b95f4217bfbc325d9f93553a"
+id = ""
+preview_id = ""
 
 [[kv_namespaces]]
 binding = "btcrank"
-id = "6d9655126ab3403cb774c1cc4455ee76"
-preview_id = "6d9655126ab3403cb774c1cc4455ee76"
+id = ""
+preview_id = ""
 
 [vars]
-CLIENT_ID = "Smx5dV9sb2IyV3ZxS3J4SldzWFU6MTpjaQ"
-CLIENT_SECRET = "vC10gcOmy2kVar7Y7GJbBC-FVzqHekNBoFgriW2DKNhl6F4qEQ"
+CLIENT_ID = ""
+CLIENT_SECRET = ""
 REDIRECT_URI = "https://bitcoin-monitor-x-auto.feng73440.workers.dev/auth/callback"
 SCOPES = "tweet.write tweet.read offline.access"
