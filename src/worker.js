@@ -112,28 +112,12 @@ async function getTokens(env) {
 }
 
 async function authStart(env) {
-  // 生成 code_verifier
-  const codeVerifier = [...crypto.getRandomValues(new Uint8Array(32))]
-    .map(x => x.toString(16).padStart(2, "0"))
-    .join("");
-
-  // 生成 code_challenge
-  const encoder = new TextEncoder();
-  const data = encoder.encode(codeVerifier);
-  const hash = await crypto.subtle.digest("SHA-256", data);
-  const base64url = btoa(String.fromCharCode(...new Uint8Array(hash)))
-    .replace(/\+/g, "-")
-    .replace(/\//g, "_")
-    .replace(/=+$/, "");
-
-  // 保存 code_verifier 到 KV
-  await env.TWITTER_KV.put("code_verifier", codeVerifier);
-
   const state = crypto.randomUUID();
   const redirectUri = encodeURIComponent(env.REDIRECT_URI);
   const scope = encodeURIComponent(env.SCOPES);
 
-  const authUrl = `https://twitter.com/i/oauth2/authorize?response_type=code&client_id=${env.CLIENT_ID}&redirect_uri=${redirectUri}&scope=${scope}&state=${state}&code_challenge=${base64url}&code_challenge_method=S256`;
+  // 注意：Confidential Client 不需要 code_challenge
+  const authUrl = `https://twitter.com/i/oauth2/authorize?response_type=code&client_id=${env.CLIENT_ID}&redirect_uri=${redirectUri}&scope=${scope}&state=${state}`;
 
   return Response.redirect(authUrl, 302);
 }
@@ -143,19 +127,20 @@ async function authCallback(request, env) {
   const code = url.searchParams.get("code");
   if (!code) return new Response("Missing code", { status: 400 });
 
-  const codeVerifier = await env.TWITTER_KV.get("code_verifier");
-  if (!codeVerifier) return new Response("Missing code_verifier", { status: 400 });
+  // 使用 client_id + client_secret 进行 Basic Auth
+  const creds = btoa(`${env.CLIENT_ID}:${env.CLIENT_SECRET}`);
 
   const body = new URLSearchParams();
   body.set("grant_type", "authorization_code");
   body.set("code", code);
   body.set("redirect_uri", env.REDIRECT_URI);
-  body.set("client_id", env.CLIENT_ID);
-  body.set("code_verifier", codeVerifier);
 
   const resp = await fetch("https://api.twitter.com/2/oauth2/token", {
     method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+      "Authorization": `Basic ${creds}`
+    },
     body: body.toString()
   });
 
